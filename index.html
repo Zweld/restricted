@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Restricted Access</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #0f1720;
+      --text: #d7dde5;
+      --muted: #8a97a6;
+      --accent: #3aa675;
+      --warn: #e3b341;
+      --danger: #e14b4b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; display: grid; place-items: center; background: radial-gradient(1200px 800px at 80% -20%, #13202f 0%, #0b0f14 55%);
+      color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .card {
+      width: min(720px, 92vw); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(6px);
+    }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .badge { font: 12px/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 12px var(--danger); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0%{ transform: scale(.95); opacity: .8;} 50%{transform: scale(1.15); opacity:1;} 100%{ transform: scale(.95); opacity:.8;} }
+
+    h1 { margin: 12px 0 6px; font-size: 28px; }
+    p { margin: 8px 0; color: var(--muted); }
+
+    .panel {
+      margin-top: 18px; background: var(--panel); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px; font-family: var(--mono); color: #b9c3cf; font-size: 14px;
+    }
+    .panel .k { color: #8fb0ff; }
+    .panel .v { color: #b9ffd6; }
+    .panel .warn { color: var(--warn); }
+
+    .actions { display: flex; gap: 10px; margin-top: 18px; }
+    button {
+      appearance: none; border: 1px solid rgba(255,255,255,0.12); background: #111925; color: var(--text);
+      padding: 10px 14px; border-radius: 12px; cursor: pointer; font-weight: 600;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease; user-select: none;
+    }
+    button:hover { background: #132131; border-color: rgba(255,255,255,0.22); }
+    button:active { transform: translateY(1px); }
+    .ghost { background: transparent; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    footer { margin-top: 12px; opacity: .7; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <div class="row">
+      <div class="dot" aria-hidden="true"></div>
+      <span class="badge">Access Denied — Code 403-R</span>
+    </div>
+
+    <h1 id="title">This site is not publicly accessible.</h1>
+    <p>Access is restricted to authorized personnel only. Unauthorized access attempts may be logged for security auditing.</p>
+
+    <section class="panel" aria-label="session details">
+<pre id="log" aria-live="polite">{
+  <span class="k">"status"</span>: <span class="v">"restricted"</span>,
+  <span class="k">"timestamp"</span>: <span class="v" id="ts">""</span>,
+  <span class="k">"sessionId"</span>: <span class="v" id="sid">""</span>,
+  <span class="k">"note"</span>: <span class="warn">"Global access disabled by administrator"</span>
+}</pre>
+    </section>
+
+    <div class="actions">
+      <button id="copy">Copy message</button>
+      <button class="ghost" id="toggle">Toggle terse mode</button>
+    </div>
+
+    
+  </main>
+
+  <script>
+    // Generate a simple timestamp and faux session id
+    function pad(n){return String(n).padStart(2,'0');}
+    const d = new Date();
+    const ts = `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`;
+    document.getElementById('ts').textContent = `"${ts}"`;
+
+    function randBlock(len){
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let out = '';
+      for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+      return out;
+    }
+    const sid = `${randBlock(4)}-${randBlock(4)}-${randBlock(4)}-${randBlock(4)}`;
+    document.getElementById('sid').textContent = `"${sid}"`;
+
+    const copyBtn = document.getElementById('copy');
+    copyBtn.addEventListener('click', async () => {
+      const text = 'This site is not publicly accessible. Access is restricted to authorized personnel only. Unauthorized access attempts may be logged.';
+      try { await navigator.clipboard.writeText(text); copyBtn.textContent = 'Copied!'; } catch(e){ copyBtn.textContent = 'Copy failed'; }
+      setTimeout(()=> copyBtn.textContent = 'Copy message', 1500);
+    });
+
+    const toggleBtn = document.getElementById('toggle');
+    const title = document.getElementById('title');
+    const log = document.getElementById('log');
+    let terse = false;
+    toggleBtn.addEventListener('click', () => {
+      terse = !terse;
+      if (terse) {
+        title.textContent = 'Restricted resource. Public access disabled.';
+        log.innerHTML = '{\n  <span class="k">"status"</span>: <span class="v">"403"</span>,\n  <span class="k">"detail"</span>: <span class="warn">"Public scope: OFF"</span>\n}';
+      } else {
+        title.textContent = 'This site is not publicly accessible.';
+        log.innerHTML = '{\n  <span class="k">"status"</span>: <span class="v">"restricted"</span>,\n  <span class="k">"timestamp"</span>: <span class="v" id="ts">""</span>,\n  <span class="k">"sessionId"</span>: <span class="v" id="sid">""</span>,\n  <span class="k">"note"</span>: <span class="warn">"Global access disabled by administrator"</span>\n}';
+        document.getElementById('ts').textContent = `"${ts}"`;
+        document.getElementById('sid').textContent = `"${sid}"`;
+      }
+    });
+  </script>
+</body>
+</html>
