@@ -52,6 +52,7 @@
         min-height: 140px;
         overflow: hidden;
         position: relative;
+        white-space: pre-wrap;
     }
     .prompt { color: var(--accent); }
     .cursor {
@@ -87,8 +88,8 @@
 
 <script>
 /**
- * This page fetches *client-side* info using a public IP API (ipapi.co) and browser APIs.
- * Nothing is stored or sent anywhere else.
+ * Fixed typing: only types TEXT, and inserts HTML in whole blocks.
+ * No data is stored anywhere.
  */
 
 const term = document.getElementById("terminal");
@@ -96,18 +97,22 @@ const statusEl = document.getElementById("status");
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-function type(text, delay=11) {
+function typeText(text, delay=14) {
   return new Promise(async (resolve) => {
     for (let ch of text) {
-      term.insertAdjacentHTML("beforeend", ch === "\n" ? "<br>" : ch);
+      term.append(document.createTextNode(ch));
       await sleep(delay);
     }
     resolve();
   });
 }
 
-function line(text) {
-  term.insertAdjacentHTML("beforeend", text + "<br>");
+function newLine() {
+  term.insertAdjacentHTML("beforeend", "<br>");
+}
+
+function prompt() {
+  term.insertAdjacentHTML("beforeend", '<span class="prompt">$</span> ');
 }
 
 // Build local browser info
@@ -132,8 +137,8 @@ async function fetchIpInfo() {
 
 (async function main(){
   const start = new Date().toISOString();
-  await type(`<span class="prompt">$</span> initializing security context…<br>`);
-  await sleep(200);
+  prompt(); await typeText("initializing security context…"); newLine();
+  await sleep(150);
 
   const local = getLocalInfo();
   const ipInfo = await fetchIpInfo();
@@ -158,18 +163,19 @@ async function fetchIpInfo() {
     note: "Local display only. No data stored."
   };
 
-  // Pretty JSON with typing effect
-  await type(`<span class="prompt">$</span> compiling visitor metadata…<br>`);
-  await sleep(250);
-  await type("{<br>");
+  prompt(); await typeText("compiling visitor metadata…"); newLine();
+  await sleep(180);
+
+  await typeText("{"); newLine();
   const entries = Object.entries(data);
   for (let i = 0; i < entries.length; i++) {
     const [k, v] = entries[i];
-    const lineText = `  "${k}": "${String(v).replace(/"/g, '\\"')}"${i < entries.length - 1 ? "," : ""}<br>`;
-    await type(lineText, 6);
+    const line = `  "${k}": "${String(v).replace(/"/g, '\\"')}"${i < entries.length - 1 ? "," : ""}`;
+    await typeText(line); newLine();
   }
-  await type("}<span class='cursor'>_</span>");
-  statusEl.textContent = ipInfo.error ? "Done (IP API failed; showed local info)" : "Done (live IP + local info)";
+  await typeText("}"); term.insertAdjacentHTML("beforeend", "<span class='cursor'>_</span>");
+
+  statusEl.textContent = (ipInfo.error ? "Done (IP API failed; showed local info)" : "Done (live IP + local info)");
 })();
 </script>
 </body>
