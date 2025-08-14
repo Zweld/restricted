@@ -1,182 +1,336 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Access Denied</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Restricted — Secure Gateway</title>
 <style>
-    :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9; --accent:#58a6ff; --danger:#ff4d4d; --muted:#8b949e; }
-    * { box-sizing: border-box; }
-    body {
-        background-color: var(--bg);
-        color: var(--text);
-        font-family: "Courier New", monospace;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        margin: 0;
-        padding: 16px;
-    }
-    .card {
-        width: 100%;
-        max-width: 720px;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 28px;
-        box-shadow: 0 0 28px rgba(0,0,0,0.55);
-        text-align: center;
-    }
-    .title {
-        font-size: 26px;
-        font-weight: 800;
-        color: var(--danger);
-        letter-spacing: .5px;
-        margin: 0 0 8px;
-        text-transform: uppercase;
-    }
-    .subtitle {
-        margin: 0 0 18px;
-        color: var(--text);
-        font-size: 16px;
-        opacity: .9;
-    }
-    .terminal {
-        text-align: left;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 16px;
-        min-height: 140px;
-        overflow: hidden;
-        position: relative;
-        white-space: pre-wrap;
-    }
-    .prompt { color: var(--accent); }
-    .cursor {
-        display: inline-block;
-        width: 10px;
-        animation: blink 1s infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-    .footer {
-        margin-top: 14px;
-        color: var(--muted);
-        font-size: 12px;
-    }
-    .badge {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 4px 8px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        font-size: 12px;
-        color: var(--muted);
-    }
+  :root{
+    --bg:#07090b; --card:#0f1720; --panel:#0b1318; --muted:#98a2b3; --accent:#8ab4ff; --danger:#ff4d4d;
+    --seal:#c0392b; --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background: radial-gradient(800px 500px at 15% 10%, #071018 0%, #030405 30%), linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    color:var(--muted); font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* subtle film grain */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.03" /></svg>');
+    mix-blend-mode:overlay; opacity:0.7;
+  }
+
+  .wrap{width:min(920px,94vw); padding:28px; border-radius:18px; background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+    border:1px solid rgba(255,255,255,0.04); box-shadow: 0 30px 80px rgba(0,0,0,0.7); backdrop-filter: blur(6px); position:relative; overflow:hidden;
+  }
+
+  /* top emblem / seal */
+  .header{display:flex;align-items:center;gap:16px;margin-bottom:10px;}
+  .seal{
+    width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #ffd6d6, #f7c6c6 8%, #b33030 40%, #8a1f1f 100%);
+    display:flex;align-items:center;justify-content:center;box-shadow: 0 6px 28px rgba(0,0,0,0.6), inset 0 2px 8px rgba(255,255,255,0.06);
+    position:relative;
+  }
+  .seal::after{ content:""; position:absolute; inset:6px;border-radius:50%; border:2px solid rgba(255,255,255,0.06); }
+  .seal svg{width:44px;height:44px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));}
+
+  .title{font-weight:700;color:var(--danger);letter-spacing:1px;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; font-size:20px; text-transform:uppercase;}
+  .subtitle{margin-top:4px;color:#9fb0c8;font-size:13px;}
+
+  .row{display:flex;gap:18px;align-items:flex-start;}
+  .left{flex:1;padding-right:8px;}
+  .right{width:360px;flex-shrink:0;}
+
+  .panel{
+    margin-top:14px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006));
+    border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; color:#cfe9ff;
+    font-size:14px; line-height:1.5; position:relative; overflow:hidden;
+  }
+
+  /* scanning overlay */
+  .panel::before{ content:""; position:absolute; left:-40%; top:-40%; width:180%; height:180%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.025) 48%, rgba(255,255,255,0) 100%); transform: rotate(-20deg); animation: scan 6s linear infinite; pointer-events:none; mix-blend-mode:overlay; opacity:0.6; }
+  @keyframes scan{ 0%{ transform:translateX(-100%) rotate(-20deg);} 100%{ transform:translateX(100%) rotate(-20deg);} }
+
+  .panel pre{ margin:0; white-space:pre-wrap; word-break:break-word; color:#b8d9ff; font-size:13px; }
+
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .chip{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px 10px;border-radius:10px;color:var(--muted); font-size:13px;}
+
+  /* right column "classified" box */
+  .statusbox{background:linear-gradient(180deg, rgba(255,255,255,0.008), rgba(255,255,255,0.004)); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.03); color:var(--muted); font-size:13px;}
+  .level{display:flex;align-items:center;gap:10px;font-weight:700;color:#ffd4b3;}
+  .level .dot{width:12px;height:12px;border-radius:2px;background:#ffd4b3; box-shadow:0 6px 18px rgba(255,200,150,0.08);}
+  .classified{ margin-top:10px; padding:10px; border-radius:8px; background:linear-gradient(180deg, rgba(255,255,255,0.004), rgba(255,255,255,0.002)); border:1px dashed rgba(255,255,255,0.02); font-family: ui-monospace, monospace; color:#dfeeff; font-size:13px; }
+
+  .controls{display:flex;gap:8px;margin-top:14px;}
+  .btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#07121a;color:var(--muted);cursor:pointer;font-weight:700;}
+  .btn:hover{transform:translateY(-2px);background:#091922;border-color:rgba(255,255,255,0.06);}
+
+  footer{margin-top:14px;color:rgba(159,176,200,0.6);font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+
+  /* faint scanlines for retro terminal feel */
+  .scanlines{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px); background-size:100% 4px; opacity:0.25; mix-blend-mode:overlay;}
+
+  /* SWAT alarm banner */
+  .alarm {
+    margin: 14px 0 2px 0;
+    position: relative;
+    border-radius: 12px;
+    padding: 14px 16px 14px 46px;
+    background: radial-gradient(120% 180% at 30% 40%, rgba(255,0,0,0.08), rgba(255,0,0,0.02));
+    border: 1px solid rgba(255, 77, 77, 0.35);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.15), inset 0 0 24px rgba(255, 0, 0, 0.08);
+    color: #ffcccc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+    overflow: hidden;
+  }
+  .alarm .icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  }
+  .alarm .headline {
+    font-weight: 800; letter-spacing: 0.8px; color: #ff4d4d; text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.6), 0 0 18px rgba(255, 0, 0, 0.35);
+  }
+  .pulse {
+    position: absolute; inset: -2px; pointer-events: none; border-radius: 14px;
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.65), 0 0 42px rgba(255, 0, 0, 0.35), inset 0 0 30px rgba(255, 0, 0, 0.2);
+    animation: pulseGlow 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+
 </style>
 </head>
 <body>
-<div class="card">
-    <div class="title">ACCESS DENIED — CODE 403-R</div>
-    <p class="subtitle">This site is restricted. Visitor metadata has been logged locally.</p>
-    <div class="terminal" id="terminal" aria-live="polite"></div>
-    <div class="badge" id="status">Collecting client data…</div>
-    <div class="footer">© Security Gateway 2025</div>
-</div>
+  <div class="wrap" role="main" aria-labelledby="main-title">
+    <div class="header">
+      <div class="seal" aria-hidden="true">
+        <!-- shield-like emblem -->
+        <svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 2l7 3v5c0 5-3.5 9-7 11-3.5-2-7-6-7-11V5l7-3z" opacity="0.95"></path>
+          <path d="M9 11h6v2H9z" opacity="0.85"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="title" id="main-title">RESTRICTED SYSTEM — SECURE GATEWAY</div>
+        <div class="subtitle">Unauthorized access is prohibited. Your connection has been identified by the gateway.</div>
+      </div>
+    </div>
+
+    <div class="alarm" role="alert" aria-live="assertive">
+      <div class="pulse" aria-hidden="true"></div>
+      <svg class="icon" viewBox="0 0 24 24" fill="#ff4d4d" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2l10 18H2L12 2zM11 9h2v5h-2V9zm0 6h2v2h-2v-2z"></path>
+      </svg>
+      <div class="headline">UNAUTHORIZED ACCESS DETECTED</div>
+      <div class="sub">S.W.A.T. units are being dispatched to your location and region. Maintain position and await further instructions.</div>
+    </div>
+
+
+    <div class="row">
+      <div class="left">
+        <div class="panel" id="panel">
+<pre id="log" aria-live="polite">{
+  "status": "restricted",
+  "timestamp": "",
+  "sessionId": "",
+  "caseId": "GX-" + "0000"
+}</pre>
+        </div>
+
+        <div class="meta" aria-hidden="true">
+          <div class="chip">Policy: National Secure Access</div>
+          <div class="chip">Audit level: HIGH</div>
+          <div class="chip">Endpoint: Gateway-07</div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="copy">Copy</button>
+          <button class="btn" id="terse">Terse</button>
+          <button class="btn" id="reveal">Reveal Details</button>
+        </div>
+      </div>
+
+      <aside class="right">
+        <div class="statusbox">
+          <div class="level"><span class="dot" aria-hidden="true"></span> CLEARANCE: TOP SECRET</div>
+          <div class="classified" id="classified">SESSION: —</div>
+          <div style="margin-top:10px;font-size:12px;color:var(--muted);">Policy enforcement active · Intrusion detection online</div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div>© Secure Infrastructure</div>
+      <div style="opacity:0.6;font-family:ui-monospace,monospace;font-size:12px;" id="host">GW-07</div>
+    </footer>
+
+    <div class="scanlines" aria-hidden="true"></div>
+  </div>
 
 <script>
-/**
- * Fixed typing: only types TEXT, and inserts HTML in whole blocks.
- * No data is stored anywhere.
- */
+// Build timestamp and session id, and show live IP info (client-side) without any visible "note".
+// The "note" field has been removed to make the page look official.
+function pad(n){return String(n).padStart(2,'0');}
+const d = new Date();
+const ts = `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`;
 
-const term = document.getElementById("terminal");
-const statusEl = document.getElementById("status");
+function randBlock(len){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+const sid = `${randBlock(4)}-${randBlock(4)}-${randBlock(4)}-${randBlock(4)}`;
+const caseId = "GX-" + (Math.floor(Math.random()*9000)+1000);
 
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const log = document.getElementById('log');
+const classified = document.getElementById('classified');
+const host = document.getElementById('host');
 
-function typeText(text, delay=14) {
-  return new Promise(async (resolve) => {
-    for (let ch of text) {
-      term.append(document.createTextNode(ch));
-      await sleep(delay);
+// Helper: safely replace the JSON block while keeping markup
+function setJSONField(field, value){
+  // replace a quoted field with same formatting
+  const html = log.innerHTML;
+  const regex = new RegExp('(\"' + field + '\"\\s*:\\s*\")[^\"]*(\")','m');
+  log.innerHTML = html.replace(regex, '$1' + String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '$2');
+}
+
+// Fill static fields
+setTimeout(()=>{
+  setJSONField('timestamp', ts);
+  setJSONField('sessionId', sid);
+  // set caseId by directly replacing the pre content (last line)
+  log.innerHTML = log.innerHTML.replace(/"caseId":\s*".*?"/, '"caseId": "'+caseId+'"');
+  classified.textContent = `SID: ${sid} · CASE: ${caseId}`;
+  host.textContent = 'GW-07';
+}, 200);
+
+// Fetch live IP details from ipapi.co for display only (client-side)
+(async function(){
+  try{
+    const res = await fetch('https://ipapi.co/json/');
+    if(!res.ok) throw new Error('ipapi');
+    const j = await res.json();
+    // append some details inside the panel to look official
+    const details = `\n\n-- Connection --\nIP: ${j.ip || '—'}\nLocation: ${j.city || '—'}, ${j.region || j.region_code || '—'}, ${j.country_name || j.country || '—'}\nISP: ${j.org || '—'}\n`;
+    log.innerHTML = log.innerHTML.replace('</pre>', details.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>');
+  }catch(e){
+    // If API fails, show nothing extra (keep it stealthy)
+  }
+})();
+
+// Buttons
+document.getElementById('copy').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(log.innerText); alert('Copied'); }catch(e){ alert('Copy failed'); }
+});
+document.getElementById('terse').addEventListener('click', ()=>{
+  log.innerHTML = '{\n  "status": "403",\n  "ref": "CLASS-403"\n}';
+  classified.textContent = 'CLASSIFIED';
+});
+document.getElementById('reveal').addEventListener('click', ()=>{
+  // expand and show more details by fetching again and revealing in-classified box
+  (async ()=>{
+    try{
+      const res = await fetch('https://ipapi.co/json/');
+      const j = await res.json();
+      classified.textContent = `IP: ${j.ip || '—'} · ${j.city||'—'}, ${j.country_name||'—'}`;
+      // show small popup-like detail in the panel
+      log.innerHTML = log.innerHTML + `\n\n-- DETAILS --\nUA: ${navigator.userAgent}\nScreen: ${screen.width}x${screen.height}\n`;
+    }catch(e){ /* silent */ }
+  })();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  function typeWriter(element, speed=30) {
+    const text = element.textContent;
+    element.textContent = '';
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        element.textContent += text.charAt(i);
+        i++;
+        setTimeout(type, speed);
+      }
     }
-    resolve();
+    type();
+  }
+  // Select all elements that have text and are visible
+  const elements = document.querySelectorAll('body *:not(script):not(style)');
+  elements.forEach(el => {
+    if (el.children.length === 0 && el.textContent.trim().length > 0) {
+      typeWriter(el, 25); // slightly faster
+    }
+  });
+});
+</script>
+
+
+<script>
+// Şeffaf tıklama katmanı oluştur
+const overlay = document.createElement('div');
+overlay.style.position = 'fixed';
+overlay.style.inset = '0';
+overlay.style.background = 'transparent';
+overlay.style.cursor = 'pointer';
+overlay.style.zIndex = '9999';
+document.body.appendChild(overlay);
+
+// İlk tıklamada fullscreen ve overlay kaldırma
+overlay.addEventListener('click', async () => {
+  try {
+    if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { // Safari
+      await document.documentElement.webkitRequestFullscreen();
+    }
+  } catch(e) {}
+  overlay.remove();
+});
+
+// Shake efekti alarm kutusuna
+function shakeElement(el) {
+  el.animate([
+    { transform: 'translate(0, 0)' },
+    { transform: 'translate(-4px, 0)' },
+    { transform: 'translate(4px, 0)' },
+    { transform: 'translate(0, 0)' }
+  ], {
+    duration: 300,
+    iterations: 1
   });
 }
-
-function newLine() {
-  term.insertAdjacentHTML("beforeend", "<br>");
-}
-
-function prompt() {
-  term.insertAdjacentHTML("beforeend", '<span class="prompt">$</span> ');
-}
-
-// Build local browser info
-function getLocalInfo() {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown";
-  const ua = navigator.userAgent;
-  const lang = navigator.language || "en";
-  const screenSize = (window.screen && window.screen.width) ? `${window.screen.width}x${window.screen.height}` : "Unknown";
-  const viewport = `${Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)}x${Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)}`;
-  return { tz, ua, lang, screenSize, viewport };
-}
-
-async function fetchIpInfo() {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    if (!res.ok) throw new Error("IP API error");
-    return await res.json();
-  } catch (e) {
-    return { error: e.message };
-  }
-}
-
-(async function main(){
-  const start = new Date().toISOString();
-  prompt(); await typeText("initializing security context…"); newLine();
-  await sleep(150);
-
-  const local = getLocalInfo();
-  const ipInfo = await fetchIpInfo();
-
-  const data = {
-    status: "restricted",
-    timestamp: start,
-    ip: ipInfo.ip || "unknown",
-    city: ipInfo.city || "unknown",
-    region: ipInfo.region || ipInfo.region_code || "unknown",
-    country: ipInfo.country_name || ipInfo.country || "unknown",
-    isp: ipInfo.org || "unknown",
-    latitude: ipInfo.latitude || "unknown",
-    longitude: ipInfo.longitude || "unknown",
-    timezone_from_ip: ipInfo.timezone || "unknown",
-    browser_language: local.lang,
-    timezone_client: local.tz,
-    user_agent: local.ua,
-    screen: local.screenSize,
-    viewport: local.viewport,
-    sessionId: Math.random().toString(36).substring(2,12).toUpperCase(),
-    note: "Local display only. No data stored."
-  };
-
-  prompt(); await typeText("compiling visitor metadata…"); newLine();
-  await sleep(180);
-
-  await typeText("{"); newLine();
-  const entries = Object.entries(data);
-  for (let i = 0; i < entries.length; i++) {
-    const [k, v] = entries[i];
-    const line = `  "${k}": "${String(v).replace(/"/g, '\\"')}"${i < entries.length - 1 ? "," : ""}`;
-    await typeText(line); newLine();
-  }
-  await typeText("}"); term.insertAdjacentHTML("beforeend", "<span class='cursor'>_</span>");
-
-  statusEl.textContent = (ipInfo.error ? "Done (IP API failed; showed local info)" : "Done (live IP + local info)");
-})();
+setInterval(() => {
+  const alarm = document.querySelector('.alarm');
+  if (alarm) shakeElement(alarm);
+}, 4000);
 </script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  (async ()=>{
+    try{
+      const res = await fetch('https://ipapi.co/json/');
+      const j = await res.json();
+      const classified = document.getElementById('classified');
+      const log = document.getElementById('log');
+      classified.textContent = `IP: ${j.ip || '—'} · ${j.city||'—'}, ${j.country_name||'—'}`;
+      log.innerHTML = log.innerHTML + `\n\n-- DETAILS --\nUA: ${navigator.userAgent}\nScreen: ${screen.width}x${screen.height}\n`;
+    }catch(e){ /* sessiz */ }
+  })();
+});
+</script>
+
 </body>
 </html>
